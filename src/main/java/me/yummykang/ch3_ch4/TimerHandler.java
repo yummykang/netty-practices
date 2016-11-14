@@ -1,4 +1,4 @@
-package me.yummykang.ch3;
+package me.yummykang.ch3_ch4;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -18,15 +18,12 @@ public class TimerHandler extends ChannelHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        ByteBuf buf = (ByteBuf) msg;
-        byte[] req = new byte[buf.readableBytes()];
-        buf.readBytes(req);
-        String body = new String(req, "UTF-8");
+        String body = (String) msg;
         System.out.println("The time server receive order:" + body + ", the counter is:" + ++counter);
         String currentTime = "Time".equalsIgnoreCase(body) ? new Date().toString() : "Bad order";
         currentTime = currentTime + System.getProperty("line.separator");
         ByteBuf resp = Unpooled.copiedBuffer(currentTime.getBytes());
-        ctx.write(resp);
+        ctx.writeAndFlush(resp);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package me.yummykang.ch3;
+package me.yummykang.ch3_ch4;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -8,6 +8,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.handler.codec.string.StringDecoder;
 
 /**
  * desc the file.
@@ -39,7 +41,11 @@ public class TimerServer {
     private class ChildrenHandler extends ChannelInitializer<io.netty.channel.socket.SocketChannel> {
 
         protected void initChannel(SocketChannel ch) throws Exception {
+            // 解决TCP粘包和拆包问题，顺序不能反
+            ch.pipeline().addLast(new LineBasedFrameDecoder(1024));
+            ch.pipeline().addLast(new StringDecoder());
             ch.pipeline().addLast(new TimerHandler());
+
         }
     }
 
