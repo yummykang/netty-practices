@@ -5,7 +5,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -15,14 +14,17 @@ import java.util.Date;
  * @Date 2016/11/14 14:39
  */
 public class TimerHandler extends ChannelHandlerAdapter {
+    private int counter;
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ByteBuf buf = (ByteBuf) msg;
         byte[] req = new byte[buf.readableBytes()];
         buf.readBytes(req);
         String body = new String(req, "UTF-8");
-        System.out.println("The time server receive order:" + body);
+        System.out.println("The time server receive order:" + body + ", the counter is:" + ++counter);
         String currentTime = "Time".equalsIgnoreCase(body) ? new Date().toString() : "Bad order";
+        currentTime = currentTime + System.getProperty("line.separator");
         ByteBuf resp = Unpooled.copiedBuffer(currentTime.getBytes());
         ctx.write(resp);
     }
