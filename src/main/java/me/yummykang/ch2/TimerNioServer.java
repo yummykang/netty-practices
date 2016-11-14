@@ -20,7 +20,9 @@ import java.util.Set;
  */
 public class TimerNioServer {
     public static void main(String[] args) {
-
+        int port = 8089;
+        MultiplexerTimeServer server = new MultiplexerTimeServer(port);
+        new Thread(server, "NIO-001").start();
     }
 }
 
@@ -59,7 +61,7 @@ class MultiplexerTimeServer implements Runnable {
                 while (iterator.hasNext()) {
                     key = iterator.next();
                     iterator.remove();
-
+                    handleInput(key);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -78,6 +80,7 @@ class MultiplexerTimeServer implements Runnable {
         if (key.isValid()) {
             if (key.isAcceptable()) {
                 ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+                System.out.println("新的连接接入：" + serverSocketChannel.getLocalAddress().toString());
                 SocketChannel socketChannel = serverSocketChannel.accept();
                 socketChannel.configureBlocking(false);
                 socketChannel.register(selector, SelectionKey.OP_READ);
@@ -92,8 +95,8 @@ class MultiplexerTimeServer implements Runnable {
                     buffer.get(bytes);
                     String body = new String(bytes, "UTF-8");
                     System.out.println("The time server receive order:" + body);
-                    String currentTime = "Time".equalsIgnoreCase(body)? new Date().toString() : "Bad Order";
-
+                    String currentTime = "Time".equalsIgnoreCase(body.replaceAll("\r\n", ""))? new Date().toString() : "Bad Order";
+                    doWrite(socketChannel, currentTime);
                 } else if(readBytes < 0) {
                     key.cancel();
                     socketChannel.close();
@@ -104,7 +107,14 @@ class MultiplexerTimeServer implements Runnable {
         }
     }
 
-    private void doWrite() {
-
+    private void doWrite(SocketChannel socketChannel, String response) throws IOException {
+        if (response != null && response.trim().length() > 0) {
+            byte[] bytes = response.getBytes();
+            ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length);
+            byteBuffer.put(bytes);
+            byteBuffer.flip();
+            socketChannel.write(byteBuffer);
+            socketChannel.close();
+        }
     }
 }
